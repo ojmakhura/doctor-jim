@@ -6,6 +6,7 @@ import de.plushnikov.doctorjim.javaparser.Token;
  * Created by IntelliJ IDEA.
  *
  * @author Plushnikov Michail
+ * @version $Id: $
  */
 public final class ElementPosition implements Comparable<ElementPosition> {
     private String mValue;
@@ -15,6 +16,13 @@ public final class ElementPosition implements Comparable<ElementPosition> {
     private int mEndColumn;
     private int mEndLine;
 
+    /**
+     * <p>Constructor for ElementPosition.</p>
+     *
+     * @param pWert a {@link java.lang.String} object.
+     * @param pStart a {@link de.plushnikov.doctorjim.javaparser.Token} object.
+     * @param pEnd a {@link de.plushnikov.doctorjim.javaparser.Token} object.
+     */
     public ElementPosition(String pWert, Token pStart, Token pEnd) {
         mValue = pWert;
         mStartLine = pStart.beginLine;
@@ -24,22 +32,47 @@ public final class ElementPosition implements Comparable<ElementPosition> {
         mEndColumn = pEnd.endColumn;
     }
 
+    /**
+     * <p>getValue</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
     public String getValue() {
         return mValue;
     }
 
+    /**
+     * <p>getStartColumn</p>
+     *
+     * @return a int.
+     */
     public int getStartColumn() {
         return mStartColumn;
     }
 
+    /**
+     * <p>getStartLine</p>
+     *
+     * @return a int.
+     */
     public int getStartLine() {
         return mStartLine;
     }
 
+    /**
+     * <p>getEndColumn</p>
+     *
+     * @return a int.
+     */
     public int getEndColumn() {
         return mEndColumn;
     }
 
+    /**
+     * <p>getEndLine</p>
+     *
+     * @return a int.
+     */
     public int getEndLine() {
         return mEndLine;
     }
@@ -48,7 +81,7 @@ public final class ElementPosition implements Comparable<ElementPosition> {
      * Compares Position of two JavaObjects
      *
      * @param pOther another ElementPosition
-     * @return
+     * @return a int.
      */
     public int compareTo(ElementPosition pOther) {
         if (mEndLine == pOther.mEndLine) {

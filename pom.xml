@@ -7,7 +7,7 @@
     <artifactId>doctor-jim</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>Java Import Beautifier</name>
+    <name>Doctor JIM: Java Import Beautifier</name>
     <description>
         Beautifiers java imports.
     </description>
@@ -33,7 +33,7 @@
         <developer>
             <id>plushnikov@web.de</id>
             <name>Michail Plushnikov</name>
-            <email>importbeautifier@plushnikov.de</email>
+            <email>doctor-jim@plushnikov.de</email>
             <roles>
                 <role>Admin</role>
                 <role>Developer</role>
@@ -43,11 +43,6 @@
     </developers>
 
     <dependencies>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
-        </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -62,12 +57,6 @@
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>1.1.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.14</version>
         </dependency>
 
         <dependency>
@@ -99,7 +88,7 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.0.2</version>
@@ -140,7 +129,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.3</version>
+                <version>2.6.1</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -155,7 +144,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.2-beta-5</version>
             </plugin>
-            
+
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>2.0.1</version>
@@ -166,6 +155,20 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>Sonatype-releases</id>
+            <name>Sonatype Staging Repository</name>
+            <url>http://oss.sonatype.org/content/groups/staging</url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
+        <snapshotRepository>
+            <id>Sonatype-snapshots</id>
+            <name>Sonatype Snapshot Repository</name>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <properties>
         <downloadSources>true</downloadSources>

@@ -3,46 +3,57 @@ package de.plushnikov.doctorjim;
 import de.plushnikov.doctorjim.javaparser.JavaParser;
 import de.plushnikov.doctorjim.javaparser.ParseException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.StringReader;
 import java.util.*;
 
 /**
- * Created by IntelliJ IDEA.
- * User: plushnim
- * Date: 03.08.2009
- * Time: 17:00:34
- * To change this template use File | Settings | File Templates.
+ * Main class for Importbeautifikation
+ *
+ * @author Plushnikov Michail
+ * @version $Id: $
  */
 public class ImportProcessor {
+    /**
+     * Logger of this class
+     */
+    private final Log sLogger = LogFactory.getLog(ImportProcessor.class);
+
     private static final String NEW__LINE = "\r\n";
     private static final String DEFAULT_PACKAGE = "";
     private static final String JAVA_LANG_PACKAGE = "java.lang";
+    private static final String STAR_IMPORT = ".*";
 
     /**
      * Import parser behaivor for .* imports
      */
     private boolean mStrict;
-    private static final String STAR_IMPORT = ".*";
 
-    private void initializeJavaLang(Collection<String> pCache) {
+    /**
+     * Adds some common used types from java.lang package
+     *
+     * @param pTypes Collection to add types to
+     */
+    private void initializeJavaLang(Collection<String> pTypes) {
         // add default java lang import
-        pCache.add("java.lang.*");
-        pCache.add("java.lang.Object");
-        pCache.add("java.lang.Short");
-        pCache.add("java.lang.Integer");
-        pCache.add("java.lang.Long");
-        pCache.add("java.lang.Float");
-        pCache.add("java.lang.Double");
-        pCache.add("java.lang.String");
-        pCache.add("java.lang.System");
-        pCache.add("java.lang.Character");
-        pCache.add("java.lang.Boolean");
-        pCache.add("java.lang.Byte");
-        pCache.add("java.lang.Number");
-        pCache.add("java.lang.Exeption");
-        pCache.add("java.lang.StringBuilder");
-        pCache.add("java.lang.StringBuffer");
+        pTypes.add("java.lang.*");
+        pTypes.add("java.lang.Object");
+        pTypes.add("java.lang.Short");
+        pTypes.add("java.lang.Integer");
+        pTypes.add("java.lang.Long");
+        pTypes.add("java.lang.Float");
+        pTypes.add("java.lang.Double");
+        pTypes.add("java.lang.String");
+        pTypes.add("java.lang.System");
+        pTypes.add("java.lang.Character");
+        pTypes.add("java.lang.Boolean");
+        pTypes.add("java.lang.Byte");
+        pTypes.add("java.lang.Number");
+        pTypes.add("java.lang.Exeption");
+        pTypes.add("java.lang.StringBuilder");
+        pTypes.add("java.lang.StringBuffer");
     }
 
     /**
@@ -50,38 +61,52 @@ public class ImportProcessor {
      */
     public ImportProcessor() {
         mStrict = true;
+        sLogger.debug("Doctor JIM created");
     }
 
     /**
-     * @return
+     * <p>isStrict</p>
+     *
+     * @return a boolean.
      */
     public boolean isStrict() {
         return mStrict;
     }
 
     /**
-     * @param pStrict
+     * <p>setStrict</p>
+     *
+     * @param pStrict a boolean.
      */
     public void setStrict(boolean pStrict) {
         mStrict = pStrict;
     }
 
     /**
-     * @param pInput
-     * @return
-     * @throws ParseException
+     * <p>organizeImports</p>
+     *
+     * @param pInput a {@link java.lang.String} object.
+     * @throws de.plushnikov.doctorjim.javaparser.ParseException if any.
+     * @return a {@link java.lang.String} object.
      */
     public String organizeImports(String pInput) throws ParseException {
-        //pInput = StringUtils.stripToEmpty(pInput);
+        sLogger.debug("Started initialization of the parser");
         // create Parser and initialize with input string
         JavaParser lParser = new JavaParser(new StringReader(pInput));
         lParser.setTabSize(1);
         // parse the string and collect all informations
         lParser.CompilationUnit();
+        sLogger.debug("Parser successfully finished");
 
         // Main package
         final ElementPosition lPackage = lParser.getPackage();
         final String lMainPackage = null == lPackage ? "" : lPackage.getValue();
+
+        if(StringUtils.isNotBlank(lMainPackage)) {
+            sLogger.debug("Found package declaration: "+lMainPackage);
+        }else{
+            sLogger.debug("Found no package declaration");
+        }
 
         // All Imports, which are already defined
         final Collection<ElementPosition> lImports = lParser.getImports();
@@ -101,6 +126,7 @@ public class ImportProcessor {
 
         // if strict and there are star imports, break and return immedeadly
         if (isStrict() && !lStarImports.isEmpty()) {
+            sLogger.debug("Doctor JIM is in strict modus and file contains star imports -> exiting");
             return pInput;
         }
 
@@ -193,6 +219,14 @@ public class ImportProcessor {
         return lBuffer.toString();
     }
 
+    /**
+     * <p>extractHeadSection</p>
+     *
+     * @param pInput a {@link java.lang.String} object.
+     * @param pPackage a {@link de.plushnikov.doctorjim.ElementPosition} object.
+     * @param pImports a {@link java.util.Collection} object.
+     * @return a {@link java.lang.String} object.
+     */
     protected String extractHeadSection(String pInput, ElementPosition pPackage, Collection<ElementPosition> pImports) {
         ElementPosition lFirstImport = null;
         if (!pImports.isEmpty()) {
@@ -205,9 +239,19 @@ public class ImportProcessor {
 
             lInputPosition = locatePosition(pInput, lLine, lColumn + 1);
         }
+        if(sLogger.isDebugEnabled()) {
+            sLogger.debug("Extract Headsection from positions [0,"+lInputPosition+"]");
+        }
         return StringUtils.stripToEmpty(pInput.substring(0, lInputPosition));
     }
 
+    /**
+     * <p>extractImportsSection</p>
+     *
+     * @param pInput a {@link java.lang.String} object.
+     * @param pImports a {@link java.util.Collection} object.
+     * @return a {@link java.lang.String} object.
+     */
     protected String extractImportsSection(String pInput, Collection<ElementPosition> pImports) {
         String result = "";
         if (!pImports.isEmpty()) {
@@ -217,11 +261,24 @@ public class ImportProcessor {
             int lStart = locatePosition(pInput, lFirstImport.getStartLine(), lFirstImport.getStartColumn());
             int lEnd = locatePosition(pInput, lLastImport.getEndLine(), lLastImport.getEndColumn());
 
+            if(sLogger.isDebugEnabled()) {
+                sLogger.debug("Extract Importssection from positions ["+lStart+","+(lEnd+1)+"]");
+            }
             result = StringUtils.stripToEmpty(pInput.substring(lStart, lEnd + 1));
+        } else {
+            sLogger.debug("No Importsection to extract");
         }
         return result;
     }
 
+    /**
+     * <p>extractBodySection</p>
+     *
+     * @param pInput a {@link java.lang.String} object.
+     * @param pPackage a {@link de.plushnikov.doctorjim.ElementPosition} object.
+     * @param pImports a {@link java.util.Collection} object.
+     * @return a {@link java.lang.String} object.
+     */
     protected String extractBodySection(String pInput, ElementPosition pPackage, Collection<ElementPosition> pImports) {
         // determine last element, after which class body declaration starts
         ElementPosition lClassBodyStartsAfterObject = pPackage;
@@ -234,20 +291,43 @@ public class ImportProcessor {
             lClassBodyStartPosition = locatePosition(pInput,
                     lClassBodyStartsAfterObject.getEndLine(), lClassBodyStartsAfterObject.getEndColumn() + 1);
         }
-
+        if(sLogger.isDebugEnabled()) {
+                sLogger.debug("Extract Bodyssection from positions ["+lClassBodyStartPosition+","+pInput.length()+"]");
+            }
         return StringUtils.stripToEmpty(pInput.substring(lClassBodyStartPosition));
     }
 
+    /**
+     * <p>verifyInputSection</p>
+     *
+     * @param pImportSection a {@link java.lang.String} object.
+     * @return a boolean.
+     */
     protected boolean verifyInputSection(String pImportSection) {
         return !pImportSection.contains("//") && !pImportSection.contains("/*") && !pImportSection.contains("*/");
     }
 
+    /**
+     * <p>isConflict</p>
+     *
+     * @param type a {@link java.lang.String} object.
+     * @param importList a {@link java.util.Collection} object.
+     * @param replacedSet a {@link java.util.Collection} object.
+     * @return a boolean.
+     */
     protected boolean isConflict(String type, Collection<String> importList,
                                  Collection<String> replacedSet) {
         return !JAVA_LANG_PACKAGE.equals(extractPackage(type)) &&
                 (isConflict(type, replacedSet) || isConflict(type, importList));
     }
 
+    /**
+     * <p>isConflict</p>
+     *
+     * @param pType a {@link java.lang.String} object.
+     * @param pTestSet a {@link java.util.Collection} object.
+     * @return a boolean.
+     */
     protected boolean isConflict(String pType, Collection<String> pTestSet) {
         if (pTestSet.contains(pType)) {
             return false;
@@ -270,8 +350,16 @@ public class ImportProcessor {
         return false;
     }
 
+    /**
+     * <p>generateImportSection</p>
+     *
+     * @param pAllImports a {@link java.util.Set} object.
+     * @param pMainPackage a {@link java.lang.String} object.
+     * @param pStarImports a {@link java.util.Collection} object.
+     * @return a {@link java.lang.String} object.
+     */
     protected String generateImportSection(Set<String> pAllImports, String pMainPackage, Collection<String> pStarImports) {
-        StringBuilder lBuffer = new StringBuilder();
+        StringBuilder lBuffer = new StringBuilder(256);
 
         for (String lImport : pAllImports) {
             String lImportPackage = extractPackage(lImport);
@@ -291,10 +379,12 @@ public class ImportProcessor {
 
 
     /**
-     * @param pInput
-     * @param pLine
-     * @param pColumn
-     * @return
+     * <p>locatePosition</p>
+     *
+     * @param pInput a {@link java.lang.String} object.
+     * @param pLine a int.
+     * @param pColumn a int.
+     * @return a int.
      */
     protected int locatePosition(String pInput, int pLine, int pColumn) {
         int result = pColumn;
@@ -304,6 +394,12 @@ public class ImportProcessor {
         return result;
     }
 
+    /**
+     * <p>extractPackage</p>
+     *
+     * @param pImportType a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     protected String extractPackage(String pImportType) {
         final int index = pImportType.lastIndexOf('.');
         String typePackage = "";

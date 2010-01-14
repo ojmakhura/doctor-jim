@@ -10,6 +10,7 @@ import java.util.TreeSet;
  * Created by IntelliJ IDEA.
  *
  * @author Plushnikov Michail
+ * @version $Id: $
  */
 public abstract class AbstractJavaParser {
     /**
@@ -46,6 +47,7 @@ public abstract class AbstractJavaParser {
      * Adds new import entry
      *
      * @param pImport    name of the import
+     * @param pImportAll true if this is a star import
      * @param pStatic    true if this is an static import
      * @param pImportAll true if this is a star import
      * @param pStart     start position Token
@@ -68,20 +70,35 @@ public abstract class AbstractJavaParser {
     /**
      * TODO docu
      *
-     * @param pType
+     * @param pType a {@link java.lang.String} object.
      */
     protected void addType(String pType) {
         mTypes.add(pType);
     }
 
+    /**
+     * <p>addAnnotation</p>
+     *
+     * @param pToken a {@link de.plushnikov.doctorjim.javaparser.Token} object.
+     */
     protected void addAnnotation(Token pToken) {
         addType(pToken.image);
     }
 
+    /**
+     * <p>addThrows</p>
+     *
+     * @param pToken a {@link de.plushnikov.doctorjim.javaparser.Token} object.
+     */
     protected void addThrows(Token pToken) {
         addType(pToken.image);
     }
 
+    /**
+     * <p>addInternType</p>
+     *
+     * @param pToken a {@link de.plushnikov.doctorjim.javaparser.Token} object.
+     */
     protected void addInternType(Token pToken) {
         final String lNameValue = pToken.image;
         final String[] lParts = lNameValue.split("\\.");
@@ -104,14 +121,29 @@ public abstract class AbstractJavaParser {
         }
     }
 
+    /**
+     * <p>addClassOrInterfaceName</p>
+     *
+     * @param pToken a {@link de.plushnikov.doctorjim.javaparser.Token} object.
+     */
     protected void addClassOrInterfaceName(Token pToken) {
         mLocalTypes.add(pToken.image);
     }
 
+    /**
+     * <p>addEnumName</p>
+     *
+     * @param pToken a {@link de.plushnikov.doctorjim.javaparser.Token} object.
+     */
     protected void addEnumName(Token pToken) {
         mLocalTypes.add(pToken.image);
     }
 
+    /**
+     * <p>addAnnotationName</p>
+     *
+     * @param pToken a {@link de.plushnikov.doctorjim.javaparser.Token} object.
+     */
     protected void addAnnotationName(Token pToken) {
         mLocalTypes.add(pToken.image);
     }
