@@ -27,6 +27,8 @@ public class Temp extends java.lang.Object implements java.util.Comparator<Integ
     }
 
     public int compare(Integer integer, Integer integer1) {
+        java.util.Map map = new java.util.HashMap<Integer, Float>(123);
+        Map<? extends Object, java.lang.Boolean> map2 = new java.util.TreeMap<? extends Object, java.lang.Boolean>(987);
         java.util.Map.Entry<Integer, Integer> b;
         return 0;
     }
@@ -106,6 +108,7 @@ public class Temp extends java.lang.Object implements java.util.Comparator<Integ
     public void test8() {
         System.out.println(java.util.Collections.class);
         System.out.println(java.util.Collection.class);
+        System.out.println(java.lang.Boolean.TRUE);
         java.util.Collections.class.toString();
         java.util.Collection.class.toString();
     }

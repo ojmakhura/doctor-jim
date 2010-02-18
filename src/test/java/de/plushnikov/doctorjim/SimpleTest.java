@@ -219,12 +219,38 @@ public class SimpleTest {
         testBeautifikation("Sample37");
     }
 
-  /**
-   * Execute beautifikation on the given file and compare result
-   * @param pFilename  filename to be used as input for beautifikation
-   * @throws IOException
-   * @throws ParseException
-   */
+    @Test
+    public void testSample38() throws Exception {
+        testBeautifikation("Sample38");
+    }
+
+    @Test
+    public void testSample39() throws Exception {
+        testBeautifikation("Sample39");
+    }
+
+    @Test
+    public void testAgendarColeta() throws Exception {
+        testBeautifikation("AgendarColeta");
+    }
+
+    @Test
+    public void testAgendarColetaController() throws Exception {
+        testBeautifikation("AgendarColetaController");
+    }
+
+    @Test
+    public void testManutencaoRelatorio() throws Exception {
+        testBeautifikation("ManutencaoRelatorio");
+    }
+
+    /**
+     * Execute beautifikation on the given file and compare result
+     *
+     * @param pFilename filename to be used as input for beautifikation
+     * @throws IOException    if any errors occured
+     * @throws ParseException if any errors occured
+     */
     private void testBeautifikation(String pFilename)
             throws IOException, ParseException {
         String lInput = IOUtils.toString(this.getClass().getResourceAsStream(pFilename + ".java_input"));
@@ -232,10 +258,7 @@ public class SimpleTest {
 
         String lOutput = mProcessor.organizeImports(lInput);
 
-        assertEquals(normalized(lExpectedOutput), normalized(lOutput));
+        assertEquals(lExpectedOutput.trim(), lOutput.trim());
     }
 
-    private String normalized(String pString) {
-        return pString.trim().replaceAll("\r\n", System.getProperty("line.separator"));
-    }
 }

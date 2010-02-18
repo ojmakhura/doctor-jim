@@ -7,7 +7,8 @@ import java.util.HashSet;
 import java.util.TreeSet;
 
 /**
- * Created by IntelliJ IDEA.
+ * Baseclass of generated JavaParser.
+ * This class provides functionality for collection of import-information during the parser run.
  *
  * @author Plushnikov Michail
  * @version $Id: $
@@ -47,7 +48,6 @@ public abstract class AbstractJavaParser {
      * Adds new import entry
      *
      * @param pImport    name of the import
-     * @param pImportAll true if this is a star import
      * @param pStatic    true if this is an static import
      * @param pImportAll true if this is a star import
      * @param pStart     start position Token
@@ -68,7 +68,7 @@ public abstract class AbstractJavaParser {
     }
 
     /**
-     * TODO docu
+     * Adds new type
      *
      * @param pType a {@link java.lang.String} object.
      */
@@ -108,7 +108,7 @@ public abstract class AbstractJavaParser {
             for (String lPart : lParts) {
                 lTypeValue.append(lPart);
                 // uses java conventions to revise type
-                if (lPart.matches("[A-Z].*")) {
+                if (lPart.matches("\\p{Lu}.*")) {
                     lFound = true;
                     break;
                 }

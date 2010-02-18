@@ -3,7 +3,7 @@ package de.plushnikov.doctorjim;
 import de.plushnikov.doctorjim.javaparser.Token;
 
 /**
- * Created by IntelliJ IDEA.
+ * Simple Bean for transportion of data of some parsed element.
  *
  * @author Plushnikov Michail
  * @version $Id: $

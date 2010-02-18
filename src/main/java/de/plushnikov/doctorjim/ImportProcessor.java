@@ -21,9 +21,10 @@ public class ImportProcessor {
      */
     private final Log sLogger = LogFactory.getLog(ImportProcessor.class);
 
-    private static final String NEW__LINE = "\r\n";
+    private static final String NEW_LINE = "\r\n";
     private static final String DEFAULT_PACKAGE = "";
     private static final String JAVA_LANG_PACKAGE = "java.lang";
+    private static final String IMPORT_STATEMENT = "import ";
     private static final String STAR_IMPORT = ".*";
 
     /**
@@ -86,8 +87,9 @@ public class ImportProcessor {
      * <p>organizeImports</p>
      *
      * @param pInput a {@link java.lang.String} object.
-     * @throws de.plushnikov.doctorjim.javaparser.ParseException if any.
      * @return a {@link java.lang.String} object.
+     * @throws de.plushnikov.doctorjim.javaparser.ParseException
+     *          if any.
      */
     public String organizeImports(String pInput) throws ParseException {
         sLogger.debug("Started initialization of the parser");
@@ -102,9 +104,9 @@ public class ImportProcessor {
         final ElementPosition lPackage = lParser.getPackage();
         final String lMainPackage = null == lPackage ? "" : lPackage.getValue();
 
-        if(StringUtils.isNotBlank(lMainPackage)) {
-            sLogger.debug("Found package declaration: "+lMainPackage);
-        }else{
+        if (StringUtils.isNotBlank(lMainPackage)) {
+            sLogger.debug("Found package declaration: " + lMainPackage);
+        } else {
             sLogger.debug("Found no package declaration");
         }
 
@@ -135,7 +137,7 @@ public class ImportProcessor {
         // extract import section of the file (everything between beginn of first import and end of last import)
         final String lImportsSection = extractImportsSection(pInput, lImports);
 
-        // check for safe import section
+        // check for safe import section (it means where are no comments beetween imports)
         final boolean lImportsAreSafe = verifyInputSection(lImportsSection);
 
         // prepare place for all javaparser imports
@@ -155,27 +157,35 @@ public class ImportProcessor {
 
         final Collection<String> lTypes = lParser.getTypes();
         for (String lType : lTypes) {
-            //System.out.println(lType);
             final String[] lParts = lType.split("\\.");
-            StringBuilder lImportPart = new StringBuilder();
-            for (String lPart : lParts) {
-                lImportPart.append(lPart);
-                if (lPart.matches("[A-Z].*")) {
-                    break;
-                }
-                lImportPart.append('.');
+
+            int lCurrentScanToken = lParts.length-1;
+            // search for last (first from the end) type-part, which starts with uppercase letter
+            while(lCurrentScanToken>=0 && !lParts[lCurrentScanToken].matches("\\p{Lu}.*")) {
+                lCurrentScanToken--;
             }
+            // be sure, we have find something
+            if(lCurrentScanToken >= 0) {
+                // drop everything after last type-part from the previous calculation
+                final String lLastTypePart = lParts[lCurrentScanToken];
+                final String lImport2Replace = lType.substring(0, lType.lastIndexOf(lLastTypePart)+lLastTypePart.length());
 
-            final String lImport2Replace = lImportPart.toString();
-            if (lImport2Replace.contains(".") && !isConflict(lImport2Replace, lOriginalImports, lGeneratedImports)) {
-                lGeneratedImports.add(lImport2Replace);
+                if (lImport2Replace.contains(".") && !isConflict(lImport2Replace, lOriginalImports, lGeneratedImports)) {
+                    final String lImport2ReplaceWith = lImport2Replace.substring(lImport2Replace.lastIndexOf('.') + 1);
 
-                final String lImport2ReplaceWith = lImport2Replace.substring(lImport2Replace.lastIndexOf('.') + 1);
+                    final String lReplaceSource = "([^\\w\\p{L}\\.\"])" + lImport2Replace.replaceAll("\\.", "\\\\s*\\.\\\\s*") + "([^\\p{L}\"])";
+                    final String lReplaceTarget = "$1" + lImport2ReplaceWith + "$2";
 
-                final String lReplaceSource = "([^\\w\\p{L}\\.\"])" + lImport2Replace.replaceAll("\\.", "\\\\s*\\.\\\\s*") + "([^\\p{L}\"])";
-                final String lReplaceTarget = "$1" + lImport2ReplaceWith + "$2";
-                lBody = lBody.replaceAll(lReplaceSource, lReplaceTarget);
-                lHeadSection = lHeadSection.replaceAll(lReplaceSource, lReplaceTarget);
+                    final String lBodyNew = lBody.replaceAll(lReplaceSource, lReplaceTarget);
+                    final String lHeadSectionNew = lHeadSection.replaceAll(lReplaceSource, lReplaceTarget);
+
+                    // add new import only if something has really changed in the output
+                    if(!lBodyNew.equals(lBody) || !lHeadSectionNew.equals(lHeadSection)) {
+                        lGeneratedImports.add(lImport2Replace);
+                        lBody = lBodyNew;
+                        lHeadSection = lHeadSectionNew;
+                    }
+                }
             }
         }
 
@@ -186,8 +196,8 @@ public class ImportProcessor {
         // add original head
         if (lHeadSection.length() > 0) {
             lBuffer.append(lHeadSection);
-            lBuffer.append(NEW__LINE);
-            lBuffer.append(NEW__LINE);
+            lBuffer.append(NEW_LINE);
+            lBuffer.append(NEW_LINE);
         }
 
         final Set<String> lAllImports = new TreeSet<String>();
@@ -196,8 +206,8 @@ public class ImportProcessor {
         if (!lImportsAreSafe) {
             if (lImportsSection.length() > 0) {
                 lBuffer.append(lImportsSection);
-                lBuffer.append(NEW__LINE);
-                lBuffer.append(NEW__LINE);
+                lBuffer.append(NEW_LINE);
+                lBuffer.append(NEW_LINE);
             }
             // remove original imports
             lGeneratedImports.removeAll(lOriginalImports);
@@ -210,7 +220,7 @@ public class ImportProcessor {
         final String lGeneratedImportsSection = generateImportSection(lAllImports, lMainPackage, lStarImports);
         if (lGeneratedImportsSection.length() > 0) {
             lBuffer.append(lGeneratedImportsSection);
-            lBuffer.append(NEW__LINE);
+            lBuffer.append(NEW_LINE);
         }
 
         // append body of class
@@ -222,7 +232,7 @@ public class ImportProcessor {
     /**
      * <p>extractHeadSection</p>
      *
-     * @param pInput a {@link java.lang.String} object.
+     * @param pInput   a {@link java.lang.String} object.
      * @param pPackage a {@link de.plushnikov.doctorjim.ElementPosition} object.
      * @param pImports a {@link java.util.Collection} object.
      * @return a {@link java.lang.String} object.
@@ -239,8 +249,8 @@ public class ImportProcessor {
 
             lInputPosition = locatePosition(pInput, lLine, lColumn + 1);
         }
-        if(sLogger.isDebugEnabled()) {
-            sLogger.debug("Extract Headsection from positions [0,"+lInputPosition+"]");
+        if (sLogger.isDebugEnabled()) {
+            sLogger.debug("Extract Headsection from positions [0," + lInputPosition + "]");
         }
         return StringUtils.stripToEmpty(pInput.substring(0, lInputPosition));
     }
@@ -248,7 +258,7 @@ public class ImportProcessor {
     /**
      * <p>extractImportsSection</p>
      *
-     * @param pInput a {@link java.lang.String} object.
+     * @param pInput   a {@link java.lang.String} object.
      * @param pImports a {@link java.util.Collection} object.
      * @return a {@link java.lang.String} object.
      */
@@ -261,8 +271,8 @@ public class ImportProcessor {
             int lStart = locatePosition(pInput, lFirstImport.getStartLine(), lFirstImport.getStartColumn());
             int lEnd = locatePosition(pInput, lLastImport.getEndLine(), lLastImport.getEndColumn());
 
-            if(sLogger.isDebugEnabled()) {
-                sLogger.debug("Extract Importssection from positions ["+lStart+","+(lEnd+1)+"]");
+            if (sLogger.isDebugEnabled()) {
+                sLogger.debug("Extract Importssection from positions [" + lStart + "," + (lEnd + 1) + "]");
             }
             result = StringUtils.stripToEmpty(pInput.substring(lStart, lEnd + 1));
         } else {
@@ -274,7 +284,7 @@ public class ImportProcessor {
     /**
      * <p>extractBodySection</p>
      *
-     * @param pInput a {@link java.lang.String} object.
+     * @param pInput   a {@link java.lang.String} object.
      * @param pPackage a {@link de.plushnikov.doctorjim.ElementPosition} object.
      * @param pImports a {@link java.util.Collection} object.
      * @return a {@link java.lang.String} object.
@@ -291,9 +301,9 @@ public class ImportProcessor {
             lClassBodyStartPosition = locatePosition(pInput,
                     lClassBodyStartsAfterObject.getEndLine(), lClassBodyStartsAfterObject.getEndColumn() + 1);
         }
-        if(sLogger.isDebugEnabled()) {
-                sLogger.debug("Extract Bodyssection from positions ["+lClassBodyStartPosition+","+pInput.length()+"]");
-            }
+        if (sLogger.isDebugEnabled()) {
+            sLogger.debug("Extract Bodyssection from positions [" + lClassBodyStartPosition + "," + pInput.length() + "]");
+        }
         return StringUtils.stripToEmpty(pInput.substring(lClassBodyStartPosition));
     }
 
@@ -310,8 +320,8 @@ public class ImportProcessor {
     /**
      * <p>isConflict</p>
      *
-     * @param type a {@link java.lang.String} object.
-     * @param importList a {@link java.util.Collection} object.
+     * @param type        a {@link java.lang.String} object.
+     * @param importList  a {@link java.util.Collection} object.
      * @param replacedSet a {@link java.util.Collection} object.
      * @return a boolean.
      */
@@ -324,7 +334,7 @@ public class ImportProcessor {
     /**
      * <p>isConflict</p>
      *
-     * @param pType a {@link java.lang.String} object.
+     * @param pType    a {@link java.lang.String} object.
      * @param pTestSet a {@link java.util.Collection} object.
      * @return a boolean.
      */
@@ -334,14 +344,14 @@ public class ImportProcessor {
         }
 
         for (String importType : pTestSet) {
-            if (!importType.endsWith(STAR_IMPORT)) {
+            if (!importType.endsWith(STAR_IMPORT) && !importType.startsWith("static ")) {
                 if (!pType.equals(importType)) {
                     String lClassName = importType;
                     final int lPosition = importType.lastIndexOf('.');
                     if (lPosition > 0) {
                         lClassName = importType.substring(lPosition);
                     }
-                    if (pType.endsWith(lClassName) && !importType.startsWith("static ")) {
+                    if (pType.endsWith(lClassName)) {
                         return true;
                     }
                 }
@@ -353,7 +363,7 @@ public class ImportProcessor {
     /**
      * <p>generateImportSection</p>
      *
-     * @param pAllImports a {@link java.util.Set} object.
+     * @param pAllImports  a {@link java.util.Set} object.
      * @param pMainPackage a {@link java.lang.String} object.
      * @param pStarImports a {@link java.util.Collection} object.
      * @return a {@link java.lang.String} object.
@@ -370,7 +380,7 @@ public class ImportProcessor {
             if (!JAVA_LANG_PACKAGE.equals(lImportPackage) &&
                     !pMainPackage.equals(lImportPackage) &&
                     (lImport.endsWith(STAR_IMPORT) || !pStarImports.contains(lImportPackage + STAR_IMPORT))) {
-                lBuffer.append("import ").append(lImport).append(';').append(NEW__LINE);
+                lBuffer.append(IMPORT_STATEMENT).append(lImport).append(';').append(NEW_LINE);
             }
         }
 
@@ -379,12 +389,12 @@ public class ImportProcessor {
 
 
     /**
-     * <p>locatePosition</p>
+     * <p>Calculates position of a line:column tuple</p>
      *
-     * @param pInput a {@link java.lang.String} object.
-     * @param pLine a int.
-     * @param pColumn a int.
-     * @return a int.
+     * @param pInput  original Data-string
+     * @param pLine   a line in this string
+     * @param pColumn a column in thid string
+     * @return Position of a character in the string
      */
     protected int locatePosition(String pInput, int pLine, int pColumn) {
         int result = pColumn;
@@ -395,10 +405,10 @@ public class ImportProcessor {
     }
 
     /**
-     * <p>extractPackage</p>
+     * <p>Extracts packagename from the type declaration</p>
      *
-     * @param pImportType a {@link java.lang.String} object.
-     * @return a {@link java.lang.String} object.
+     * @param pImportType a declaration of some type.
+     * @return packagename of this type
      */
     protected String extractPackage(String pImportType) {
         final int index = pImportType.lastIndexOf('.');

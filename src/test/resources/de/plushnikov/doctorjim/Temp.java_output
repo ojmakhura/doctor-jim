@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Just a test class
@@ -33,6 +34,8 @@ public class Temp extends Object implements Comparator<Integer> {
     }
 
     public int compare(Integer integer, Integer integer1) {
+        Map map = new HashMap<Integer, Float>(123);
+        Map<? extends Object, Boolean> map2 = new TreeMap<? extends Object, Boolean>(987);
         Map.Entry<Integer, Integer> b;
         return 0;
     }
@@ -112,6 +115,7 @@ public class Temp extends Object implements Comparator<Integer> {
     public void test8() {
         System.out.println(Collections.class);
         System.out.println(Collection.class);
+        System.out.println(Boolean.TRUE);
         Collections.class.toString();
         Collection.class.toString();
     }
