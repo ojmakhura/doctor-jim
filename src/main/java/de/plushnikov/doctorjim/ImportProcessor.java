@@ -2,10 +2,13 @@ package de.plushnikov.doctorjim;
 
 import de.plushnikov.doctorjim.javaparser.JavaParser;
 import de.plushnikov.doctorjim.javaparser.ParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
 
@@ -31,6 +34,10 @@ public class ImportProcessor {
      * Import parser behaivor for .* imports
      */
     private boolean mStrict;
+    /**
+     * Encoding to read or write
+     */
+    private String mEncoding;
 
     /**
      * Adds some common used types from java.lang package
@@ -58,10 +65,24 @@ public class ImportProcessor {
     }
 
     /**
+     * Apply workaround for import of Map.Entry.
+     * @param pImport2Replace String of import to be replaced
+     * @return String of import, which should  be replaced
+     */
+    private String changeReplacementWorkaround(String pImport2Replace) {
+        String result = pImport2Replace;
+        if(pImport2Replace.equals("java.util.Map.Entry")) {
+            result = "java.util.Map";
+        }
+        return result;
+    }
+
+    /**
      * Default constructor
      */
     public ImportProcessor() {
         mStrict = true;
+        mEncoding = null;
         sLogger.debug("Doctor JIM created");
     }
 
@@ -84,12 +105,42 @@ public class ImportProcessor {
     }
 
     /**
-     * <p>organizeImports</p>
+     * Get encoding used to read/write files
+     * @return encoding
+     */
+    public String getEncoding() {
+        return mEncoding;
+    }
+
+    /**
+     * Sets encoding to use for file reading and writing
+     * @param pEncoding  the encoding to use, <code>null</code> means platform default
+     */
+    public void setEncoding(String pEncoding) {
+        mEncoding = pEncoding;
+    }
+
+    /**
+     * Organized imports from InputFile and writes procesed data to OutputFile
+     * @param pInputFile the file to read, must not be <code>null</code>
+     * @param pOutputFile the file to write to, must not be <code>null</code>
+     * @throws ParseException  in case of an parsing errors
+     * @throws IOException  in case of an I/O error
+     * @throws java.io.UnsupportedEncodingException if the encoding is not supported by the VM
+     */
+    public void organizeImports(File pInputFile, File pOutputFile) throws ParseException, IOException {
+        final String lInput = FileUtils.readFileToString(pInputFile, getEncoding());
+        String lOutput = organizeImports(lInput);
+        FileUtils.writeStringToFile(pOutputFile, lOutput, getEncoding());
+    }
+
+    /**
+     * Organized imports from the given String
      *
      * @param pInput a {@link java.lang.String} object.
      * @return a {@link java.lang.String} object.
      * @throws de.plushnikov.doctorjim.javaparser.ParseException
-     *          if any.
+     *          in case of an parsing errors
      */
     public String organizeImports(String pInput) throws ParseException {
         sLogger.debug("Started initialization of the parser");
@@ -168,7 +219,9 @@ public class ImportProcessor {
             if(lCurrentScanToken >= 0) {
                 // drop everything after last type-part from the previous calculation
                 final String lLastTypePart = lParts[lCurrentScanToken];
-                final String lImport2Replace = lType.substring(0, lType.lastIndexOf(lLastTypePart)+lLastTypePart.length());
+                String lImport2Replace = lType.substring(0, lType.lastIndexOf(lLastTypePart)+lLastTypePart.length());
+                // apply workaround for Map.Entry import
+                lImport2Replace = changeReplacementWorkaround(lImport2Replace);
 
                 if (lImport2Replace.contains(".") && !isConflict(lImport2Replace, lOriginalImports, lGeneratedImports)) {
                     final String lImport2ReplaceWith = lImport2Replace.substring(lImport2Replace.lastIndexOf('.') + 1);
