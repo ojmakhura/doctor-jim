@@ -230,6 +230,11 @@ public class SimpleTest {
     }
 
     @Test
+    public void testSample40() throws Exception {
+        testBeautifikation("Sample40");
+    }
+
+    @Test
     public void testAgendarColeta() throws Exception {
         testBeautifikation("AgendarColeta");
     }

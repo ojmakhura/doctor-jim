@@ -223,7 +223,9 @@ public class ImportProcessor {
                 // apply workaround for Map.Entry import
                 lImport2Replace = changeReplacementWorkaround(lImport2Replace);
 
-                if (lImport2Replace.contains(".") && !isConflict(lImport2Replace, lOriginalImports, lGeneratedImports)) {
+                // import should start with lowercase and contains '.'
+                if (lImport2Replace.matches("[\\p{L}&&[^\\p{Lu}]].*\\..*") &&
+                        !isConflict(lImport2Replace, lOriginalImports, lGeneratedImports)) {
                     final String lImport2ReplaceWith = lImport2Replace.substring(lImport2Replace.lastIndexOf('.') + 1);
 
                     final String lReplaceSource = "([^\\w\\p{L}\\.\"])" + lImport2Replace.replaceAll("\\.", "\\\\s*\\.\\\\s*") + "([^\\p{L}\"])";
