@@ -4,7 +4,7 @@
     <groupId>de.plushnikov</groupId>
     <artifactId>doctor-jim</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
     <name>Doctor JIM: Java Import Beautifier</name>
     <description>
         Beautifiers java imports.
@@ -16,9 +16,9 @@
         <url>http://code.google.com/p/doctor-jim/issues/list</url>
     </issueManagement>
     <scm>
-        <connection>scm:svn:http://doctor-jim.googlecode.com/svn/tags/doctor-jim-1.0</connection>
-        <developerConnection>scm:svn:https://doctor-jim.googlecode.com/svn/tags/doctor-jim-1.0</developerConnection>
-        <url>http://code.google.com/p/doctor-jim/source/browse/tags/doctor-jim-1.0</url>
+        <connection>scm:svn:http://doctor-jim.googlecode.com/svn/trunk</connection>
+        <developerConnection>scm:svn:https://doctor-jim.googlecode.com/svn/trunk</developerConnection>
+        <url>http://code.google.com/p/doctor-jim/source/browse/trunk</url>
     </scm>
     <licenses>
         <license>
