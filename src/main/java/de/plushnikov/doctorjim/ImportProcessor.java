@@ -3,7 +3,7 @@ package de.plushnikov.doctorjim;
 import de.plushnikov.doctorjim.javaparser.JavaParser;
 import de.plushnikov.doctorjim.javaparser.ParseException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
